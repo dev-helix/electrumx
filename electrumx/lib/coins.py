@@ -2688,6 +2688,71 @@ class GroestlcoinTestnet(Groestlcoin):
         'aocojvqcybdoxekv.onion t',
     ]
 
+class Helix(Coin):
+    NAME = "Helix"
+    SHORTNAME = "HLIX"
+    NET = "mainnet"
+    XPUB_VERBYTES = bytes.fromhex("022D2533")
+    XPRV_VERBYTES = bytes.fromhex("0221312B")
+    GENESIS_HASH = '79a3c45d6e2760efb4d6de76d34b1f4833ba919bc114e1da0f671b1700a78f08'
+    P2PKH_VERBYTE = bytes.fromhex("28")
+    P2SH_VERBYTE = bytes.fromhex("0d")
+    WIF_BYTE = bytes.fromhex("d4")
+    TX_COUNT_HEIGHT = 1026120
+    TX_COUNT = 1972704
+    TX_PER_BLOCK = 1
+    STATIC_BLOCK_HEADERS = False
+    RPC_PORT = 37416
+    ZEROCOIN_HEADER = 112
+    ZEROCOIN_START_HEIGHT = 90202
+    ZEROCOIN_BLOCK_VERSION = 4
+
+    @classmethod
+    def static_header_len(cls, height):
+        '''Given a header height return its length.'''
+        if height >= cls.ZEROCOIN_START_HEIGHT:
+            return cls.ZEROCOIN_HEADER
+        else:
+            return cls.BASIC_HEADER_SIZE
+
+    @classmethod
+    def header_hash(cls, header):
+        '''Given a header return the hash.'''
+        version, = struct.unpack('<I', header[:4])
+        if version >= cls.ZEROCOIN_BLOCK_VERSION:
+            return super().header_hash(header)
+        else:
+            import quark_hash
+            return quark_hash.getPoWHash(header)
+            
+    @classmethod
+    def electrum_header(cls, header, height):
+         version, = struct.unpack('<I', header[:4])
+         timestamp, bits, nonce = struct.unpack('<III', header[68:80])
+
+
+         if (version >= cls.ZEROCOIN_BLOCK_VERSION):
+             return {
+                 'block_height': height,
+                 'version': version,
+                 'prev_block_hash': hash_to_str(header[4:36]),
+                 'merkle_root': hash_to_str(header[36:68]),
+                 'timestamp': timestamp,
+                 'bits': bits,
+                 'nonce': nonce,
+                 'acc_checkpoint': hash_to_str(header[80:112])
+             }
+         else:
+             return {
+                 'block_height': height,
+                 'version': version,
+                 'prev_block_hash': hash_to_str(header[4:36]),
+                 'merkle_root': hash_to_str(header[36:68]),
+                 'timestamp': timestamp,
+                 'bits': bits,
+                 'nonce': nonce,
+             }
+
 
 class Pivx(Coin):
     NAME = "PIVX"
@@ -2725,6 +2790,33 @@ class Pivx(Coin):
         else:
             import quark_hash
             return quark_hash.getPoWHash(header)
+            
+    @classmethod
+    def electrum_header(cls, header, height):
+        version, = struct.unpack('<I', header[:4])
+        timestamp, bits, nonce = struct.unpack('<III', header[68:80])
+
+        if version >= cls.ZEROCOIN_BLOCK_VERSION:
+            return {
+                'block_height': height,
+                'version': version,
+                'prev_block_hash': hash_to_str(header[4:36]),
+                'merkle_root': hash_to_str(header[36:68]),
+                'timestamp': timestamp,
+                'bits': bits,
+                'nonce': nonce,
+                'acc_checkpoint': hash_to_str(header[80:112])
+            }
+        else:
+            return {
+                'block_height': height,
+                'version': version,
+                'prev_block_hash': hash_to_str(header[4:36]),
+                'merkle_root': hash_to_str(header[36:68]),
+                'timestamp': timestamp,
+                'bits': bits,
+                'nonce': nonce,
+            }
 
 
 class PivxTestnet(Pivx):
