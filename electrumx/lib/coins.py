@@ -2698,13 +2698,13 @@ class Helix(Coin):
     P2PKH_VERBYTE = bytes.fromhex("28")
     P2SH_VERBYTE = bytes.fromhex("0d")
     WIF_BYTE = bytes.fromhex("d4")
-    TX_COUNT_HEIGHT = 569399
-    TX_COUNT = 2157510
+    TX_COUNT_HEIGHT = 1026120
+    TX_COUNT = 1972704
     TX_PER_BLOCK = 1
     STATIC_BLOCK_HEADERS = False
     RPC_PORT = 37416
     ZEROCOIN_HEADER = 112
-    ZEROCOIN_START_HEIGHT = 90201
+    ZEROCOIN_START_HEIGHT = 90202
     ZEROCOIN_BLOCK_VERSION = 4
 
     @classmethod
@@ -2724,6 +2724,34 @@ class Helix(Coin):
         else:
             import quark_hash
             return quark_hash.getPoWHash(header)
+            
+    @classmethod
+    def electrum_header(cls, header, height):
+         version, = struct.unpack('<I', header[:4])
+         timestamp, bits, nonce = struct.unpack('<III', header[68:80])
+
+
+         if (version >= cls.ZEROCOIN_BLOCK_VERSION):
+             return {
+                 'block_height': height,
+                 'version': version,
+                 'prev_block_hash': hash_to_str(header[4:36]),
+                 'merkle_root': hash_to_str(header[36:68]),
+                 'timestamp': timestamp,
+                 'bits': bits,
+                 'nonce': nonce,
+                 'acc_checkpoint': hash_to_str(header[80:112])
+             }
+         else:
+             return {
+                 'block_height': height,
+                 'version': version,
+                 'prev_block_hash': hash_to_str(header[4:36]),
+                 'merkle_root': hash_to_str(header[36:68]),
+                 'timestamp': timestamp,
+                 'bits': bits,
+                 'nonce': nonce,
+             }
 
 class Pivx(Coin):
     NAME = "PIVX"
